@@ -1,0 +1,139 @@
+#version 450 core
+
+// =============================================================================
+// GLSL 4.50 Compute Shader: Tiled Scaled Dot-Product Attention
+// Designed for Vulkan / OpenGL compute pipelines
+// =============================================================================
+
+layout (local_size_x = 16, local_size_y = 1, local_size_z = 1) in;
+
+layout (std140, binding = 0) uniform UniformBufferObject {
+    uint batch_size;
+    uint num_heads;
+    uint seq_len;
+    uint head_dim;
+    float scale;
+    uint is_causal;
+} ubo;
+
+layout (std430, binding = 1) readonly buffer QBuffer {
+    float Q[];
+};
+
+layout (std430, binding = 2) readonly buffer KBuffer {
+    float K[];
+};
+
+layout (std430, binding = 3) readonly buffer VBuffer {
+    float V[];
+};
+
+layout (std430, binding = 4) writeonly buffer OBuffer {
+    float O[];
+};
+
+// Shared memory tiles
+shared float s_Q[16 * 64];
+shared float s_K[16 * 64];
+shared float s_V[16 * 64];
+
+void main() {
+    uint block_m = gl_WorkGroupID.x;
+    uint batch_head = gl_WorkGroupID.z;
+    uint tid = gl_LocalInvocationID.x;
+
+    uint N = ubo.seq_len;
+    uint D = ubo.head_dim;
+    float scale = ubo.scale;
+
+    uint global_row = block_m * 16 + tid;
+    uint base_offset = batch_head * N * D;
+
+    float m_i = -1e30;
+    float l_i = 0.0;
+    float acc_o[64];
+
+    for (uint d = 0; d < D; ++d) {
+        acc_o[d] = 0.0;
+    }
+
+    // Load Q into shared memory
+    for (uint d = 0; d < D; ++d) {
+        if (global_row < N && d < D) {
+            s_Q[tid * D + d] = Q[base_offset + global_row * D + d];
+        } else {
+            s_Q[tid * D + d] = 0.0;
+        }
+    }
+    barrier();
+
+    uint num_blocks = (N + 15) / 16;
+    for (uint kv_b = 0; kv_b < num_blocks; ++kv_b) {
+        // Load K and V
+        for (uint d = 0; d < D; ++d) {
+            uint kv_row = kv_b * 16 + tid;
+            if (kv_row < N && d < D) {
+                s_K[tid * D + d] = K[base_offset + kv_row * D + d];
+                s_V[tid * D + d] = V[base_offset + kv_row * D + d];
+            } else {
+                s_K[tid * D + d] = 0.0;
+                s_V[tid * D + d] = 0.0;
+            }
+        }
+        barrier();
+
+        if (global_row < N) {
+            float s_row[16];
+            float tile_max = -1e30;
+
+            for (uint j = 0; j < 16; ++j) {
+                uint kv_col = kv_b * 16 + j;
+                if (kv_col < N && (ubo.is_causal == 0 || global_row >= kv_col)) {
+                    float dot = 0.0;
+                    for (uint d = 0; d < D; ++d) {
+                        dot += s_Q[tid * D + d] * s_K[j * D + d];
+                    }
+                    float val = dot * scale;
+                    s_row[j] = val;
+                    tile_max = max(tile_max, val);
+                } else {
+                    s_row[j] = -1e30;
+                }
+            }
+
+            // Online Softmax step
+            float m_prev = m_i;
+            float m_new = max(m_prev, tile_max);
+            float correction = exp(m_prev - m_new);
+
+            float sum_p = 0.0;
+            for (uint j = 0; j < 16; ++j) {
+                if (s_row[j] > -1e25) {
+                    s_row[j] = exp(s_row[j] - m_new);
+                    sum_p += s_row[j];
+                } else {
+                    s_row[j] = 0.0;
+                }
+            }
+
+            l_i = l_i * correction + sum_p;
+            m_i = m_new;
+
+            for (uint d = 0; d < D; ++d) {
+                float pv = 0.0;
+                for (uint j = 0; j < 16; ++j) {
+                    pv += s_row[j] * s_V[j * D + d];
+                }
+                acc_o[d] = acc_o[d] * correction + pv;
+            }
+        }
+        barrier();
+    }
+
+    if (global_row < N) {
+        float inv_l = 1.0 / (l_i + 1e-6);
+        for (uint d = 0; d < D; ++d) {
+            O[base_offset + global_row * D + d] = acc_o[d] * inv_l;
+        }
+    }
+}
