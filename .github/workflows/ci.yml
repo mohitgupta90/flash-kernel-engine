@@ -1,0 +1,60 @@
+name: FlashKernel-Engine CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  validation-and-lint:
+    name: Code Quality & Numerical Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install numpy pytest
+
+      - name: Run Numerical Precision & Correctness Verification
+        run: |
+          python python/tests/test_correctness.py
+
+      - name: Run Roofline Operational Intensity Analysis
+        run: |
+          python scripts/roofline_analysis.py
+
+  build-cuda:
+    name: CUDA Kernel Compilation Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install CUDA Toolkit
+        uses: Jimver/cuda-toolkit@v0.2.14
+        with:
+          cuda-version: '12.2.0'
+          method: 'network'
+          sub-packages: '["nvcc", "cudart-dev"]'
+
+      - name: Verify NVCC
+        run: |
+          nvcc --version
+
+      - name: Configure CMake
+        run: |
+          mkdir build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CUDA_ARCHITECTURES="75;80;89"
+
+      - name: Build Library and Benchmarks
+        run: |
+          cmake --build build --config Release -j 4

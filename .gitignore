@@ -1,0 +1,41 @@
+# Build Artifacts
+build/
+bin/
+lib/
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+*.a
+*.lib
+
+# Python Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+*.egg
+
+# PyTorch C++ Extensions
+*.so
+*.pyd
+
+# Profiling & Reports
+reports/
+*.ncu-rep
+*.nsys-rep
+*.qdrep
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
