@@ -32,7 +32,7 @@ message(STATUS "FlashKernel-Engine configured with CUDA Architectures: ${CMAKE_C
 # -----------------------------------------------------------------------------
 # Compiler Flags
 # -----------------------------------------------------------------------------
-set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 --use_fast_math -Xptxas -v --expt-relaxed-constexpr")
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 --use_fast_math --expt-relaxed-constexpr")
 
 if(MSVC)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3> $<$<COMPILE_LANGUAGE:CXX>:/O2>)
