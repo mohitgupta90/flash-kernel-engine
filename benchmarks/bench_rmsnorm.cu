@@ -3,6 +3,7 @@
 #include <vector>
 #include <iomanip>
 #include <cmath>
+#include <algorithm>
 
 using namespace flash_engine::norm;
 

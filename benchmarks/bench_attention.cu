@@ -3,6 +3,8 @@
 #include <vector>
 #include <chrono>
 #include <iomanip>
+#include <cmath>
+#include <algorithm>
 
 using namespace flash_engine::attention;
 
