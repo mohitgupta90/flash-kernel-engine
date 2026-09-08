@@ -35,9 +35,9 @@ message(STATUS "FlashKernel-Engine configured with CUDA Architectures: ${CMAKE_C
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -O3 --use_fast_math -Xptxas -v --expt-relaxed-constexpr")
 
 if(MSVC)
-    add_compile_options(/W3 /O2)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/W3> $<$<COMPILE_LANGUAGE:CXX>:/O2>)
 else()
-    add_compile_options(-Wall -Wextra -O3)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wall> $<$<COMPILE_LANGUAGE:CXX>:-Wextra> $<$<COMPILE_LANGUAGE:CXX>:-O3>)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -45,12 +45,11 @@ endif()
 # -----------------------------------------------------------------------------
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
 )
 
 # -----------------------------------------------------------------------------
-find_package(CUDAToolkit REQUIRED)
-
+# Core Library Target
+# -----------------------------------------------------------------------------
 set(ENGINE_SOURCES
     src/flash_attention.cu
     src/tensor_core_attention.cu
@@ -77,8 +76,6 @@ add_library(flash_kernel_engine STATIC
     ${ENGINE_HEADERS}
 )
 
-target_link_libraries(flash_kernel_engine PUBLIC CUDA::cudart)
-
 target_include_directories(flash_kernel_engine PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -88,10 +85,10 @@ target_include_directories(flash_kernel_engine PUBLIC
 # Standalone Benchmark Executables
 # -----------------------------------------------------------------------------
 add_executable(bench_attention benchmarks/bench_attention.cu)
-target_link_libraries(bench_attention PRIVATE flash_kernel_engine CUDA::cudart)
+target_link_libraries(bench_attention PRIVATE flash_kernel_engine)
 
 add_executable(bench_rmsnorm benchmarks/bench_rmsnorm.cu)
-target_link_libraries(bench_rmsnorm PRIVATE flash_kernel_engine CUDA::cudart)
+target_link_libraries(bench_rmsnorm PRIVATE flash_kernel_engine)
 
 # -----------------------------------------------------------------------------
 # Installation
