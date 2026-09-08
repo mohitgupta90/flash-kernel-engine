@@ -16,7 +16,7 @@ sources = [
     "src/fused_rope.cu",
     "src/tensor_core_attention.cu",
     "src/cuda_graph_runner.cu",
-    "src/flash_engine_api.cpp",
+    "src/flash_engine_api.cu",
 ]
 
 # CUDA architecture flags (Ampere, Ada, Hopper, Volta, Turing)

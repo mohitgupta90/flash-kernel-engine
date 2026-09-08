@@ -49,8 +49,8 @@ include_directories(
 )
 
 # -----------------------------------------------------------------------------
-# Core Library Target
-# -----------------------------------------------------------------------------
+find_package(CUDAToolkit REQUIRED)
+
 set(ENGINE_SOURCES
     src/flash_attention.cu
     src/tensor_core_attention.cu
@@ -58,7 +58,7 @@ set(ENGINE_SOURCES
     src/fused_activations.cu
     src/fused_rope.cu
     src/cuda_graph_runner.cu
-    src/flash_engine_api.cpp
+    src/flash_engine_api.cu
 )
 
 set(ENGINE_HEADERS
@@ -77,6 +77,8 @@ add_library(flash_kernel_engine STATIC
     ${ENGINE_HEADERS}
 )
 
+target_link_libraries(flash_kernel_engine PUBLIC CUDA::cudart)
+
 target_include_directories(flash_kernel_engine PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -86,10 +88,10 @@ target_include_directories(flash_kernel_engine PUBLIC
 # Standalone Benchmark Executables
 # -----------------------------------------------------------------------------
 add_executable(bench_attention benchmarks/bench_attention.cu)
-target_link_libraries(bench_attention PRIVATE flash_kernel_engine)
+target_link_libraries(bench_attention PRIVATE flash_kernel_engine CUDA::cudart)
 
 add_executable(bench_rmsnorm benchmarks/bench_rmsnorm.cu)
-target_link_libraries(bench_rmsnorm PRIVATE flash_kernel_engine)
+target_link_libraries(bench_rmsnorm PRIVATE flash_kernel_engine CUDA::cudart)
 
 # -----------------------------------------------------------------------------
 # Installation

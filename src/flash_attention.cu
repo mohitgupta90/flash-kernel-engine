@@ -187,7 +187,8 @@ __global__ void __launch_bounds__(128, 2) flash_attention_2_forward_kernel_fp32(
     int max_kv_block = num_kv_blocks;
     if (is_causal) {
         // Causal masking: key block index j cannot exceed query block index i
-        max_kv_block = std::min(num_kv_blocks, ((block_m_idx + 1) * BLOCK_M + BLOCK_N - 1) / BLOCK_N);
+        int causal_blocks = ((block_m_idx + 1) * BLOCK_M + BLOCK_N - 1) / BLOCK_N;
+        max_kv_block = (num_kv_blocks < causal_blocks) ? num_kv_blocks : causal_blocks;
     }
 
     // -------------------------------------------------------------------------
@@ -402,7 +403,8 @@ __global__ void __launch_bounds__(128, 2) flash_attention_2_forward_kernel_fp16(
     __syncthreads();
 
     int num_kv_blocks = (M + BLOCK_N - 1) / BLOCK_N;
-    int max_kv_block = is_causal ? std::min(num_kv_blocks, ((block_m_idx + 1) * BLOCK_M + BLOCK_N - 1) / BLOCK_N) : num_kv_blocks;
+    int causal_limit = ((block_m_idx + 1) * BLOCK_M + BLOCK_N - 1) / BLOCK_N;
+    int max_kv_block = is_causal ? ((num_kv_blocks < causal_limit) ? num_kv_blocks : causal_limit) : num_kv_blocks;
 
     for (int kv_idx = 0; kv_idx < max_kv_block; ++kv_idx) {
         int total_kv = BLOCK_N * HEAD_DIM;
