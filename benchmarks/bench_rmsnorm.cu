@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <cmath>
 #include <algorithm>
+#include <string>
 
 using namespace flash_engine::norm;
 

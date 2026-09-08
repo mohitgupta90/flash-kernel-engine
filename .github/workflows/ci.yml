@@ -44,7 +44,7 @@ jobs:
           wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
           sudo dpkg -i cuda-keyring_1.1-1_all.deb
           sudo apt-get update
-          sudo apt-get install -y cuda-minimal-build-12-2 cuda-cudart-dev-12-2
+          sudo apt-get install -y cuda-compiler-12-2 cuda-libraries-dev-12-2
           echo "/usr/local/cuda-12.2/bin" >> $GITHUB_PATH
           echo "CUDA_PATH=/usr/local/cuda-12.2" >> $GITHUB_ENV
           echo "LD_LIBRARY_PATH=/usr/local/cuda-12.2/lib64:$LD_LIBRARY_PATH" >> $GITHUB_ENV
@@ -62,4 +62,11 @@ jobs:
 
       - name: Build CUDA Library and Benchmarks
         run: |
-          cmake --build build --config Release --verbose -j 2
+          set -o pipefail
+          cmake --build build --config Release -j 2 2>&1 | tee build.log || {
+            echo "### CUDA Build Failed" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat build.log >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            exit 1
+          }
