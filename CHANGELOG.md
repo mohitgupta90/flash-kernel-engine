@@ -5,6 +5,15 @@ All notable changes to the **FlashKernel-Engine** project will be documented in 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-09-09
+
+### Added
+- **Speculative Decoding Parallel Verification Engine** (`src/speculative_decoding.cu`, `include/speculative_decoding.cuh`):
+  - Fused warp-level draft token evaluation against target model logits.
+  - Single-pass rejection verification and recovery token sampling.
+  - Automated test suite (`tests/test_speculative_decoding.cu`) and latency benchmark (`benchmarks/bench_speculative.cu`).
+  - Python reference implementation and algorithmic verification in `test_correctness.py`.
+
 ---
 
 ## [1.1.0] - 2026-09-09
