@@ -4,6 +4,7 @@
 #include "flash_attention.cuh"
 #include "paged_attention.cuh"
 #include "flash_decoding.cuh"
+#include "speculative_decoding.cuh"
 #include "quantized_gemm.cuh"
 #include "fused_cross_entropy.cuh"
 #include "fused_rmsnorm.cuh"
@@ -17,11 +18,11 @@ namespace flash_engine {
 
 // Version information
 constexpr int VERSION_MAJOR = 1;
-constexpr int VERSION_MINOR = 1;
+constexpr int VERSION_MINOR = 2;
 constexpr int VERSION_PATCH = 0;
 
 inline const char* get_version() {
-    return "1.1.0";
+    return "1.2.0";
 }
 
 // Print GPU Hardware properties (SMs, Warp size, Max shared memory, Compute capability)

@@ -16,6 +16,7 @@ from flash_engine.ops import (
     flash_attention,
     paged_attention,
     flash_decoding,
+    speculative_verify,
     quantized_gemm_int8,
     fused_cross_entropy,
     fused_rmsnorm,
@@ -82,6 +83,33 @@ def test_flash_decoding():
     print(f"  -> Max difference vs standard attention: {diff:.6e}")
     assert diff < 1e-4, f"Split-KV mismatch exceeds tolerance: {diff}"
     print("  -> FlashDecoding two-stage reduction PASS.")
+    return True
+
+def test_speculative_verification():
+    print("[TEST] Speculative Decoding Parallel Verification Verification...")
+    B, K, V = 2, 3, 32
+    target_logits = np.zeros((B, K + 1, V), dtype=np.float32)
+    draft_tokens = np.array([[5, 12, 20], [8, 15, 25]], dtype=np.int64)
+    
+    # Seq 0: All match + bonus token 7
+    target_logits[0, 0, 5] = 10.0
+    target_logits[0, 1, 12] = 10.0
+    target_logits[0, 2, 20] = 10.0
+    target_logits[0, 3, 7] = 10.0
+    
+    # Seq 1: Pos 0 match (8), Pos 1 mismatch (expected 30, draft 15)
+    target_logits[1, 0, 8] = 10.0
+    target_logits[1, 1, 30] = 10.0
+    
+    accepted_tokens, accepted_counts = speculative_verify(target_logits, draft_tokens)
+    
+    assert accepted_counts[0] == 4
+    assert np.array_equal(accepted_tokens[0, :4], [5, 12, 20, 7])
+    
+    assert accepted_counts[1] == 2
+    assert np.array_equal(accepted_tokens[1, :2], [8, 30])
+    
+    print("  -> Speculative acceptance and recovery sampling PASS.")
     return True
 
 def test_quantized_gemm():
@@ -165,6 +193,7 @@ if __name__ == "__main__":
         test_online_softmax_attention() and
         test_paged_attention() and
         test_flash_decoding() and
+        test_speculative_verification() and
         test_quantized_gemm() and
         test_fused_cross_entropy() and
         test_fused_rmsnorm() and
@@ -174,7 +203,7 @@ if __name__ == "__main__":
     
     if success:
         print("=" * 65)
-        print(" ALL 8 NUMERICAL VERIFICATION SUITES PASSED (100% SUCCESS)")
+        print(" ALL 9 NUMERICAL VERIFICATION SUITES PASSED (100% SUCCESS)")
         print("=" * 65)
         sys.exit(0)
     else:
