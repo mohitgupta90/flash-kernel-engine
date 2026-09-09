@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you utilize FlashKernel-Engine in your research or production infrastructure, please cite it as below."
+authors:
+  - family-names: "Gupta"
+    given-names: "Mohit"
+    email: "mohitgupta.nitk@gmail.com"
+    affiliation: "High-Performance Systems & CUDA Engineering"
+title: "FlashKernel-Engine: High-Throughput CUDA & WebGPU Kernel Optimization Engine for Transformer Architectures"
+version: 1.1.0
+date-released: 2026-09-09
+url: "https://github.com/mohitgupta90/flash-kernel-engine"
+repository-code: "https://github.com/mohitgupta90/flash-kernel-engine"
+keywords:
+  - "cuda"
+  - "flash-attention"
+  - "paged-attention"
+  - "split-kv-decoding"
+  - "wmma-tensor-cores"
+  - "gpu-optimization"
+  - "webgpu"
+  - "deep-learning"
+license: "Apache-2.0"

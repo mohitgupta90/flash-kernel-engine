@@ -1,0 +1,69 @@
+name: "Bug Report"
+description: "Report a bug, kernel crash, or numerical divergence in FlashKernel-Engine."
+title: "[BUG]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please provide sufficient context so we can reproduce and patch the issue quickly.
+
+  - type: input
+    id: gpu-model
+    attributes:
+      label: GPU Hardware & Architecture
+      description: What GPU model and compute capability are you running on? (e.g., RTX 4090 sm_89, A100 sm_80, H100 sm_90)
+      placeholder: "NVIDIA A100-SXM4-80GB (sm_80)"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: CUDA Driver & Toolkit Version
+      description: Output of `nvcc --version` and `nvidia-smi`.
+      placeholder: "CUDA 12.2, Driver 535.129.03, GCC 11.4"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: affected-module
+    attributes:
+      label: Affected Component
+      options:
+        - "FlashAttention-2 Forward"
+        - "PagedAttention v1 (KV Cache)"
+        - "FlashDecoding (Split-KV)"
+        - "Quantized INT8 DP4A / FP8 GEMM"
+        - "Fused RMSNorm / Activations"
+        - "CUDA Graph Runner"
+        - "Asynchronous Memory Pool"
+        - "WebGPU / WGSL Compute"
+        - "Python C++ Extension Bindings"
+        - "CMake / Build System"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: Clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal Reproducible Example
+      description: Provide a minimal code snippet or command line invocation to reproduce the issue.
+      render: c++
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Console / CUDA Error Logs
+      description: Copy and paste stderr logs, including stack traces or `cudaGetLastError()` outputs.
+      render: shell

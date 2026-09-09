@@ -1,0 +1,40 @@
+name: "Feature Request"
+description: "Suggest a new kernel optimization, hardware target, or memory primitive."
+title: "[FEAT]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for a new CUDA kernel, memory optimization, or architectural enhancement? We'd love to hear it!
+
+  - type: input
+    id: title-summary
+    attributes:
+      label: Feature Summary
+      description: A concise one-sentence description of the proposed feature.
+      placeholder: "Implement FlashAttention-3 Hopper TMA asynchronous warp-group GEMM"
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Problem & Motivation
+      description: What bottleneck or limitation does this feature resolve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Implementation Design
+      description: Detail the CUDA kernel design, memory hierarchy strategy, or API additions.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What other approaches or libraries (e.g. cuDNN, Triton, CUTLASS) have you evaluated?
