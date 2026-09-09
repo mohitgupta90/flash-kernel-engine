@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 project(FlashKernelEngine
-    VERSION 1.1.0
+    VERSION 1.2.0
     DESCRIPTION "High-Performance CUDA & WebGPU Kernel Optimization Engine for Transformers"
     LANGUAGES CXX CUDA
 )
@@ -54,6 +54,7 @@ set(ENGINE_SOURCES
     src/flash_attention.cu
     src/paged_attention.cu
     src/flash_decoding.cu
+    src/speculative_decoding.cu
     src/quantized_gemm.cu
     src/fused_cross_entropy.cu
     src/cuda_memory_pool.cu
@@ -71,6 +72,7 @@ set(ENGINE_HEADERS
     include/flash_attention.cuh
     include/paged_attention.cuh
     include/flash_decoding.cuh
+    include/speculative_decoding.cuh
     include/quantized_gemm.cuh
     include/fused_cross_entropy.cuh
     include/cuda_memory_pool.h
@@ -103,6 +105,9 @@ target_link_libraries(bench_rmsnorm PRIVATE flash_kernel_engine)
 add_executable(bench_decoding benchmarks/bench_decoding.cu)
 target_link_libraries(bench_decoding PRIVATE flash_kernel_engine)
 
+add_executable(bench_speculative benchmarks/bench_speculative.cu)
+target_link_libraries(bench_speculative PRIVATE flash_kernel_engine)
+
 # -----------------------------------------------------------------------------
 # Unit & Correctness Test Executables
 # -----------------------------------------------------------------------------
@@ -112,11 +117,14 @@ target_link_libraries(test_paged_attention PRIVATE flash_kernel_engine)
 add_executable(test_quantized_gemm tests/test_quantized_gemm.cu)
 target_link_libraries(test_quantized_gemm PRIVATE flash_kernel_engine)
 
+add_executable(test_speculative_decoding tests/test_speculative_decoding.cu)
+target_link_libraries(test_speculative_decoding PRIVATE flash_kernel_engine)
+
 # -----------------------------------------------------------------------------
 # Installation
 # -----------------------------------------------------------------------------
 include(GNUInstallDirs)
-install(TARGETS flash_kernel_engine bench_attention bench_rmsnorm bench_decoding test_paged_attention test_quantized_gemm
+install(TARGETS flash_kernel_engine bench_attention bench_rmsnorm bench_decoding bench_speculative test_paged_attention test_quantized_gemm test_speculative_decoding
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

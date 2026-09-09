@@ -142,6 +142,41 @@ def flash_decoding(query, key, value, num_splits: int = 4, scale: float = None):
         
     return global_out / global_sum
 
+def speculative_verify(target_logits, draft_tokens):
+    """
+    Speculative decoding parallel verification reference.
+    target_logits: [B, K + 1, V]
+    draft_tokens: [B, K]
+    Returns: (accepted_tokens, accepted_counts)
+    """
+    B, K_plus_1, V = target_logits.shape
+    K = draft_tokens.shape[1]
+    
+    accepted_tokens = np.zeros((B, K_plus_1), dtype=np.int64)
+    accepted_counts = np.zeros((B,), dtype=np.int32)
+    
+    for b in range(B):
+        count = 0
+        stopped = False
+        for k in range(K):
+            target_argmax = int(np.argmax(target_logits[b, k]))
+            draft_token = int(draft_tokens[b, k])
+            if target_argmax == draft_token:
+                accepted_tokens[b, count] = draft_token
+                count += 1
+            else:
+                accepted_tokens[b, count] = target_argmax
+                count += 1
+                stopped = True
+                break
+        if not stopped:
+            bonus = int(np.argmax(target_logits[b, K]))
+            accepted_tokens[b, count] = bonus
+            count += 1
+        accepted_counts[b] = count
+        
+    return accepted_tokens, accepted_counts
+
 def quantized_gemm_int8(A, B, scale_a: float = 1.0, scale_b: float = 1.0):
     """
     Simulated INT8 DP4A Matrix Multiplication with dequantization:
