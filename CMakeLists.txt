@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
 
 project(FlashKernelEngine
-    VERSION 1.0.0
+    VERSION 1.1.0
     DESCRIPTION "High-Performance CUDA & WebGPU Kernel Optimization Engine for Transformers"
     LANGUAGES CXX CUDA
 )
@@ -52,6 +52,11 @@ include_directories(
 # -----------------------------------------------------------------------------
 set(ENGINE_SOURCES
     src/flash_attention.cu
+    src/paged_attention.cu
+    src/flash_decoding.cu
+    src/quantized_gemm.cu
+    src/fused_cross_entropy.cu
+    src/cuda_memory_pool.cu
     src/tensor_core_attention.cu
     src/fused_rmsnorm.cu
     src/fused_activations.cu
@@ -64,6 +69,11 @@ set(ENGINE_HEADERS
     include/flash_engine.h
     include/cuda_utils.cuh
     include/flash_attention.cuh
+    include/paged_attention.cuh
+    include/flash_decoding.cuh
+    include/quantized_gemm.cuh
+    include/fused_cross_entropy.cuh
+    include/cuda_memory_pool.h
     include/tensor_core_gemm.cuh
     include/fused_rmsnorm.cuh
     include/fused_activations.cuh
@@ -90,11 +100,23 @@ target_link_libraries(bench_attention PRIVATE flash_kernel_engine)
 add_executable(bench_rmsnorm benchmarks/bench_rmsnorm.cu)
 target_link_libraries(bench_rmsnorm PRIVATE flash_kernel_engine)
 
+add_executable(bench_decoding benchmarks/bench_decoding.cu)
+target_link_libraries(bench_decoding PRIVATE flash_kernel_engine)
+
+# -----------------------------------------------------------------------------
+# Unit & Correctness Test Executables
+# -----------------------------------------------------------------------------
+add_executable(test_paged_attention tests/test_paged_attention.cu)
+target_link_libraries(test_paged_attention PRIVATE flash_kernel_engine)
+
+add_executable(test_quantized_gemm tests/test_quantized_gemm.cu)
+target_link_libraries(test_quantized_gemm PRIVATE flash_kernel_engine)
+
 # -----------------------------------------------------------------------------
 # Installation
 # -----------------------------------------------------------------------------
 include(GNUInstallDirs)
-install(TARGETS flash_kernel_engine bench_attention bench_rmsnorm
+install(TARGETS flash_kernel_engine bench_attention bench_rmsnorm bench_decoding test_paged_attention test_quantized_gemm
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
